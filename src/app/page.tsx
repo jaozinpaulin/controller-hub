@@ -38,17 +38,17 @@ export default function CoreDashboard() {
     return (
         <main className="min-h-[100dvh] w-full flex flex-col relative selection:bg-base-text selection:text-base-bg overflow-x-hidden">
 
-            {/* BANNER NO TOPO */}
+            {/* BANNER (Altura aumentada para exibir mais a imagem) */}
             {images.banner && (
-                <div className="absolute top-0 left-0 w-full h-48 sm:h-64 z-0 pointer-events-none">
-                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-base-bg/80 to-base-bg z-10" />
+                <div className="absolute top-0 left-0 w-full h-72 sm:h-96 z-0 pointer-events-none">
+                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-base-bg/60 to-base-bg z-10" />
                     <img src={images.banner} alt="Banner" className="w-full h-full object-cover opacity-60 grayscale-[10%]" />
                 </div>
             )}
 
-            {/* MODAL DE CONFIGURAÇÃO */}
+            {/* MODAL DE CONFIGURAÇÃO (Posicionado ao topo para evitar sobreposição do teclado) */}
             {isMenuOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
+                <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/85 backdrop-blur-sm p-4 pt-10 sm:pt-20">
                     <div className="tactical-panel w-full max-w-sm flex flex-col shadow-2xl shadow-black/50">
 
                         <div className="flex justify-between items-center border-b border-base-border p-4 bg-base-bg/50">
@@ -121,7 +121,7 @@ export default function CoreDashboard() {
             {/* CONTEÚDO PRINCIPAL */}
             <div className="relative z-10 w-full p-4 sm:p-8 max-w-[1600px] mx-auto flex flex-col gap-6">
 
-                {/* HEADER TÁTICO MINIMALISTA */}
+                {/* HEADER */}
                 <header className="flex pb-4 mt-2 sm:mt-8">
                     <button
                         onClick={() => setIsMenuOpen(true)}
@@ -148,6 +148,7 @@ export default function CoreDashboard() {
                     <section className="lg:col-span-4 flex flex-col gap-4">
                         <div className="grid grid-cols-2 lg:grid-cols-1 gap-4">
 
+                            {/* CPU */}
                             <div className="tactical-panel p-4 sm:p-5 flex flex-col gap-1">
                                 <span className="text-[10px] font-mono text-base-muted tracking-widest uppercase">CPU</span>
                                 <div className="flex items-end gap-2 mt-1">
@@ -161,6 +162,7 @@ export default function CoreDashboard() {
                                 </div>
                             </div>
 
+                            {/* GPU */}
                             <div className="tactical-panel p-4 sm:p-5 flex flex-col gap-1">
                                 <span className="text-[10px] font-mono text-base-muted tracking-widest uppercase">GPU</span>
                                 <div className="flex items-end gap-2 mt-1">
@@ -174,7 +176,7 @@ export default function CoreDashboard() {
                                 </div>
                             </div>
 
-                            {/* CARD FANS COM RPM DISCRETO NO OFF */}
+                            {/* FANS */}
                             <div className="tactical-panel p-4 sm:p-5 flex flex-col col-span-2 lg:col-span-1 gap-4">
                                 <div className="flex justify-between items-end">
                                     <span className="text-[10px] font-mono text-base-muted tracking-widest uppercase mb-1">Fans</span>
@@ -192,11 +194,11 @@ export default function CoreDashboard() {
                                             onClick={() => setFanSpeed(speed)}
                                             className={`flex-1 py-1.5 text-[9px] font-mono border transition-all ${fanSpeed === speed
                                                 ? speed === 0
-                                                    ? 'bg-base-border/50 text-base-muted border-base-border font-bold opacity-70' // OFF Ativo (Discreto)
-                                                    : 'bg-base-text text-base-bg border-base-text font-bold'   // Velocidade Ativa
+                                                    ? 'bg-base-border/50 text-base-muted border-base-border font-bold opacity-70'
+                                                    : 'bg-base-text text-base-bg border-base-text font-bold'
                                                 : speed === 0
-                                                    ? 'bg-base-bg text-base-muted border-base-border hover:border-base-muted opacity-50 hover:opacity-100' // OFF Inativo
-                                                    : 'bg-base-bg text-base-muted border-base-border hover:border-base-muted' // Velocidade Inativa
+                                                    ? 'bg-base-bg text-base-muted border-base-border hover:border-base-muted opacity-50 hover:opacity-100'
+                                                    : 'bg-base-bg text-base-muted border-base-border hover:border-base-muted'
                                                 }`}
                                         >
                                             {speed === 0 ? 'OFF' : `${speed}%`}
@@ -210,7 +212,7 @@ export default function CoreDashboard() {
                     <section className="lg:col-span-8 flex flex-col">
                         <div className="tactical-panel p-4 sm:p-6 lg:p-8 flex flex-col gap-6 sm:gap-8">
 
-                            {/* MODOS DE ILUMINAÇÃO COM OFF DISCRETO */}
+                            {/* MODOS DE ILUMINAÇÃO */}
                             <div className="flex flex-col gap-2 sm:gap-3">
                                 <div className="flex gap-2">
                                     {['static', 'breathing', 'rainbow', 'off'].map((mode) => (
@@ -219,10 +221,10 @@ export default function CoreDashboard() {
                                             onClick={() => setLedConfig({ ...ledConfig, mode })}
                                             className={`flex-1 h-10 text-[9px] sm:text-[10px] uppercase tracking-widest font-mono border transition-all ${ledConfig.mode === mode
                                                 ? mode === 'off'
-                                                    ? 'bg-base-border/50 text-base-muted border-base-border font-bold opacity-70' // OFF Ativo
+                                                    ? 'bg-base-border/50 text-base-muted border-base-border font-bold opacity-70'
                                                     : 'bg-base-text text-base-bg border-base-text font-bold'
                                                 : mode === 'off'
-                                                    ? 'bg-transparent text-base-muted border-base-border hover:border-base-muted opacity-50 hover:opacity-100' // OFF Inativo
+                                                    ? 'bg-transparent text-base-muted border-base-border hover:border-base-muted opacity-50 hover:opacity-100'
                                                     : 'bg-transparent text-base-muted border-base-border hover:border-base-muted'
                                                 }`}
                                         >
@@ -251,8 +253,9 @@ export default function CoreDashboard() {
                                 </div>
                             </div>
 
-                            {/* INTENSIDADE E INPUT HEX */}
-                            <div className={`grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 mt-2 transition-opacity ${ledConfig.mode === 'off' ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
+                            {/* INTENSIDADE E SELETOR DE CORES NATIVO SIMPLIFICADO */}
+                            <div className={`flex flex-col gap-6 sm:gap-8 mt-2 transition-opacity ${ledConfig.mode === 'off' ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
+
                                 <div className="flex flex-col gap-3 sm:gap-4 justify-center">
                                     <div className="flex justify-between text-[9px] sm:text-[10px] font-mono tracking-widest text-base-muted uppercase">
                                         <span>Intensidade</span>
@@ -267,22 +270,19 @@ export default function CoreDashboard() {
                                     />
                                 </div>
 
-                                <div className="flex flex-col justify-end">
-                                    <div className="flex h-10 border border-base-border bg-base-panel focus-within:border-base-muted transition-colors">
-                                        <div className="w-10 h-full flex items-center justify-center border-r border-base-border">
-                                            <input
-                                                type="color" value={ledConfig.color}
-                                                onChange={(e) => setLedConfig({ ...ledConfig, color: e.target.value })}
-                                                className="w-5 h-5 p-0 border-0 bg-transparent cursor-pointer"
-                                            />
-                                        </div>
+                                {/* Input de Cores Focado apenas na experiência tátil/visual */}
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[10px] font-mono text-base-muted tracking-widest uppercase">Cor Customizada</span>
+                                    <div className="w-12 h-10 border border-base-border bg-base-panel focus-within:border-base-muted transition-colors relative overflow-hidden">
                                         <input
-                                            type="text" value={ledConfig.color.toUpperCase()}
+                                            type="color"
+                                            value={ledConfig.color}
                                             onChange={(e) => setLedConfig({ ...ledConfig, color: e.target.value })}
-                                            className="flex-1 bg-transparent text-base-text text-xs px-3 focus:outline-none uppercase tracking-widest font-mono"
+                                            className="absolute -inset-2 w-16 h-16 cursor-pointer"
                                         />
                                     </div>
                                 </div>
+
                             </div>
 
                         </div>
