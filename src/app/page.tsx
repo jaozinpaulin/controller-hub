@@ -2,15 +2,19 @@
 
 import { useState, useEffect } from 'react';
 
+// Paleta Rápida
 const PRESETS = [
-    { name: 'FROST', hex: '#88C0D0' },
-    { name: 'SAKURA', hex: '#B48EAD' },
-    { name: 'SAND', hex: '#EBCB8B' },
-    { name: 'CRIMSON', hex: '#BF616A' },
-    { name: 'SNOW', hex: '#ECEFF4' },
-    { name: 'MINT', hex: '#A3BE8C' },
-    { name: 'DUSK', hex: '#D08770' },
-    { name: 'SLATE', hex: '#5E81AC' },
+    { name: 'FROST', hex: '#88C0D0' }, { name: 'SAKURA', hex: '#B48EAD' },
+    { name: 'SAND', hex: '#EBCB8B' }, { name: 'CRIMSON', hex: '#BF616A' },
+    { name: 'SNOW', hex: '#ECEFF4' }, { name: 'MINT', hex: '#A3BE8C' },
+    { name: 'DUSK', hex: '#D08770' }, { name: 'SLATE', hex: '#5E81AC' },
+];
+
+// Paleta Estendida (Fica oculta até clicar)
+const EXTENDED_PALETTE = [
+    '#BF616A', '#D08770', '#EBCB8B', '#A3BE8C', '#8FBCBB', '#88C0D0', '#81A1C1', '#5E81AC',
+    '#B48EAD', '#4C566A', '#D8DEE9', '#E5E9F0', '#ECEFF4', '#2E3440', '#3B4252', '#434C5E',
+    '#FF5555', '#50FA7B', '#F1FA8C', '#BD93F9', '#FF79C6', '#8BE9FD', '#F8F8F2', '#44475A'
 ];
 
 const FAN_SPEEDS = [0, 25, 50, 75, 100];
@@ -20,22 +24,31 @@ export default function CoreDashboard() {
     const [fanSpeed, setFanSpeed] = useState(50);
 
     const [images, setImages] = useState({ banner: '', avatar: '' });
+    const [fileNames, setFileNames] = useState({ banner: '', avatar: '' });
     const [userName, setUserName] = useState('USER');
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-    // Carrega os dados salvos no Local Storage assim que a página é montada
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [showExtendedPalette, setShowExtendedPalette] = useState(false);
+
+    // Carrega os dados salvos
     useEffect(() => {
         const savedName = localStorage.getItem('core_userName');
         const savedAvatar = localStorage.getItem('core_avatar');
         const savedBanner = localStorage.getItem('core_banner');
+        const savedAvatarName = localStorage.getItem('core_avatarName');
+        const savedBannerName = localStorage.getItem('core_bannerName');
 
         if (savedName) setUserName(savedName);
-        if (savedAvatar || savedBanner) {
-            setImages({
-                avatar: savedAvatar || '',
-                banner: savedBanner || ''
-            });
-        }
+
+        setImages({
+            avatar: savedAvatar || '',
+            banner: savedBanner || ''
+        });
+
+        setFileNames({
+            avatar: savedAvatarName || '',
+            banner: savedBannerName || ''
+        });
     }, []);
 
     const metrics = { cpuUsage: 22, cpuTemp: 42, gpuUsage: 64, gpuTemp: 58 };
@@ -44,17 +57,19 @@ export default function CoreDashboard() {
     const handleUpload = (type: 'banner' | 'avatar') => (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
+            setFileNames(prev => ({ ...prev, [type]: file.name }));
             const reader = new FileReader();
             reader.onload = (event) => setImages(prev => ({ ...prev, [type]: event.target?.result as string }));
             reader.readAsDataURL(file);
         }
     };
 
-    // Função que salva no Local Storage e fecha o menu
     const handleSaveSettings = () => {
         localStorage.setItem('core_userName', userName);
         localStorage.setItem('core_avatar', images.avatar);
         localStorage.setItem('core_banner', images.banner);
+        localStorage.setItem('core_avatarName', fileNames.avatar);
+        localStorage.setItem('core_bannerName', fileNames.banner);
         setIsMenuOpen(false);
     };
 
@@ -71,17 +86,20 @@ export default function CoreDashboard() {
 
             {/* MODAL DE CONFIGURAÇÃO */}
             {isMenuOpen && (
-                <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/85 backdrop-blur-sm p-4 pt-10 sm:pt-20">
-                    <div className="tactical-panel w-full max-w-sm flex flex-col shadow-2xl shadow-black/50">
+                <div
+                    className="fixed inset-0 z-50 flex items-start justify-center bg-black/85 backdrop-blur-sm p-4 pt-10 sm:pt-20"
+                    onClick={() => setIsMenuOpen(false)} // Fecha ao clicar fora
+                >
+                    <div
+                        className="tactical-panel w-full max-w-sm flex flex-col shadow-2xl shadow-black/50"
+                        onClick={(e) => e.stopPropagation()} // Impede que o clique dentro do menu o feche
+                    >
 
                         <div className="flex justify-between items-center border-b border-base-border p-4 bg-base-bg/50">
                             <span className="text-xs font-mono text-base-text tracking-widest uppercase">
                                 Configurações
                             </span>
-                            <button
-                                onClick={() => setIsMenuOpen(false)}
-                                className="text-base-muted hover:text-base-text transition-colors"
-                            >
+                            <button onClick={() => setIsMenuOpen(false)} className="text-base-muted hover:text-base-text transition-colors">
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M6 18L18 6M6 6l12 12" />
                                 </svg>
@@ -93,27 +111,46 @@ export default function CoreDashboard() {
                             <div className="flex flex-col gap-2">
                                 <label className="text-[10px] font-mono text-base-muted uppercase tracking-widest">Designação</label>
                                 <input
-                                    type="text"
-                                    value={userName}
-                                    onChange={(e) => setUserName(e.target.value)}
-                                    placeholder="USER"
-                                    maxLength={15}
+                                    type="text" value={userName} onChange={(e) => setUserName(e.target.value)}
+                                    placeholder="USER" maxLength={15}
                                     className="w-full bg-base-panel border border-base-border text-base-text px-3 py-2 text-sm font-mono uppercase focus:outline-none focus:border-base-muted transition-colors placeholder:text-base-muted/30"
                                 />
                             </div>
 
-                            <div className="flex flex-col gap-2">
+                            <div className="flex flex-col gap-3">
                                 <label className="text-[10px] font-mono text-base-muted uppercase tracking-widest">Módulos Visuais</label>
 
+                                {/* UPLOAD AVATAR */}
                                 <label className="flex items-center justify-between bg-base-panel border border-base-border p-3 cursor-pointer hover:border-base-muted transition-colors">
-                                    <span className="text-xs font-mono text-base-text uppercase tracking-widest">Avatar</span>
-                                    <span className="text-[10px] text-base-muted">UPLOAD</span>
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-[11px] font-mono text-base-text uppercase tracking-widest">Avatar</span>
+                                        {images.avatar && (
+                                            <div className="flex items-center gap-2 bg-base-bg px-2 py-1 border border-base-border">
+                                                <img src={images.avatar} alt="thumb" className="w-4 h-4 object-cover" />
+                                                <span className="text-[9px] font-mono text-base-muted truncate max-w-[60px] sm:max-w-[80px]">
+                                                    {fileNames.avatar || 'FILE.PNG'}
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <span className="text-[10px] font-mono text-base-muted">UPLOAD</span>
                                     <input type="file" accept="image/*" className="hidden" onChange={handleUpload('avatar')} />
                                 </label>
 
+                                {/* UPLOAD BANNER */}
                                 <label className="flex items-center justify-between bg-base-panel border border-base-border p-3 cursor-pointer hover:border-base-muted transition-colors">
-                                    <span className="text-xs font-mono text-base-text uppercase tracking-widest">Banner</span>
-                                    <span className="text-[10px] text-base-muted">UPLOAD</span>
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-[11px] font-mono text-base-text uppercase tracking-widest">Banner</span>
+                                        {images.banner && (
+                                            <div className="flex items-center gap-2 bg-base-bg px-2 py-1 border border-base-border">
+                                                <img src={images.banner} alt="thumb" className="w-4 h-4 object-cover" />
+                                                <span className="text-[9px] font-mono text-base-muted truncate max-w-[60px] sm:max-w-[80px]">
+                                                    {fileNames.banner || 'FILE.PNG'}
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <span className="text-[10px] font-mono text-base-muted">UPLOAD</span>
                                     <input type="file" accept="image/*" className="hidden" onChange={handleUpload('banner')} />
                                 </label>
                             </div>
@@ -144,12 +181,8 @@ export default function CoreDashboard() {
             {/* CONTEÚDO PRINCIPAL */}
             <div className="relative z-10 w-full p-4 sm:p-8 max-w-[1600px] mx-auto flex flex-col gap-6">
 
-                {/* HEADER */}
                 <header className="flex pb-4 mt-2 sm:mt-8">
-                    <button
-                        onClick={() => setIsMenuOpen(true)}
-                        className="flex items-center gap-4 group text-left"
-                    >
+                    <button onClick={() => setIsMenuOpen(true)} className="flex items-center gap-4 group text-left">
                         <div className="w-14 h-14 sm:w-16 sm:h-16 bg-base-panel border border-base-border group-hover:border-base-muted flex items-center justify-center overflow-hidden transition-colors shrink-0 shadow-lg shadow-black/50">
                             {images.avatar ? (
                                 <img src={images.avatar} alt="Avatar" className="w-full h-full object-cover" />
@@ -157,7 +190,6 @@ export default function CoreDashboard() {
                                 <span className="text-[10px] font-mono text-base-muted">IMG</span>
                             )}
                         </div>
-
                         <div className="flex flex-col justify-center">
                             <h1 className="text-xl sm:text-2xl font-light tracking-[0.2em] text-base-text uppercase truncate max-w-[200px] sm:max-w-md group-hover:text-white transition-colors drop-shadow-md">
                                 {userName || 'USER'}
@@ -171,7 +203,6 @@ export default function CoreDashboard() {
                     <section className="lg:col-span-4 flex flex-col gap-4">
                         <div className="grid grid-cols-2 lg:grid-cols-1 gap-4">
 
-                            {/* CPU */}
                             <div className="tactical-panel p-4 sm:p-5 flex flex-col gap-1">
                                 <span className="text-[10px] font-mono text-base-muted tracking-widest uppercase">CPU</span>
                                 <div className="flex items-end gap-2 mt-1">
@@ -185,7 +216,6 @@ export default function CoreDashboard() {
                                 </div>
                             </div>
 
-                            {/* GPU */}
                             <div className="tactical-panel p-4 sm:p-5 flex flex-col gap-1">
                                 <span className="text-[10px] font-mono text-base-muted tracking-widest uppercase">GPU</span>
                                 <div className="flex items-end gap-2 mt-1">
@@ -199,7 +229,6 @@ export default function CoreDashboard() {
                                 </div>
                             </div>
 
-                            {/* FANS */}
                             <div className="tactical-panel p-4 sm:p-5 flex flex-col col-span-2 lg:col-span-1 gap-4">
                                 <div className="flex justify-between items-end">
                                     <span className="text-[10px] font-mono text-base-muted tracking-widest uppercase mb-1">Fans</span>
@@ -235,7 +264,6 @@ export default function CoreDashboard() {
                     <section className="lg:col-span-8 flex flex-col">
                         <div className="tactical-panel p-4 sm:p-6 lg:p-8 flex flex-col gap-6 sm:gap-8">
 
-                            {/* MODOS DE ILUMINAÇÃO */}
                             <div className="flex flex-col gap-2 sm:gap-3">
                                 <div className="flex gap-2">
                                     {['static', 'breathing', 'rainbow', 'off'].map((mode) => (
@@ -257,7 +285,6 @@ export default function CoreDashboard() {
                                 </div>
                             </div>
 
-                            {/* CORES */}
                             <div className={`flex flex-col gap-3 transition-opacity ${(ledConfig.mode === 'rainbow' || ledConfig.mode === 'off') ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
                                 <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
                                     {PRESETS.map((p, idx) => (
@@ -265,10 +292,7 @@ export default function CoreDashboard() {
                                             key={idx}
                                             onClick={() => setLedConfig({ ...ledConfig, color: p.hex })}
                                             className="h-10 sm:h-12 w-full flex items-center justify-center border transition-all"
-                                            style={{
-                                                backgroundColor: `${p.hex}20`,
-                                                borderColor: ledConfig.color === p.hex ? p.hex : 'transparent',
-                                            }}
+                                            style={{ backgroundColor: `${p.hex}20`, borderColor: ledConfig.color === p.hex ? p.hex : 'transparent' }}
                                         >
                                             <span className="w-3 sm:w-4 h-1" style={{ backgroundColor: p.hex }} />
                                         </button>
@@ -276,7 +300,6 @@ export default function CoreDashboard() {
                                 </div>
                             </div>
 
-                            {/* INTENSIDADE E SELETOR DE CORES NATIVO SIMPLIFICADO */}
                             <div className={`flex flex-col gap-6 sm:gap-8 mt-2 transition-opacity ${ledConfig.mode === 'off' ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
 
                                 <div className="flex flex-col gap-3 sm:gap-4 justify-center">
@@ -293,14 +316,43 @@ export default function CoreDashboard() {
                                     />
                                 </div>
 
-                                <div className="flex items-center justify-between">
-                                    <span className="text-[10px] font-mono text-base-muted tracking-widest uppercase">Cor Customizada</span>
-                                    <div className="w-12 h-10 border border-base-border bg-base-panel focus-within:border-base-muted transition-colors relative overflow-hidden">
+                                <div className="flex flex-col gap-3">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[10px] font-mono text-base-muted tracking-widest uppercase">Paleta Avançada</span>
+                                        <button
+                                            onClick={() => setShowExtendedPalette(!showExtendedPalette)}
+                                            className="text-[9px] uppercase tracking-widest font-mono text-base-text border border-base-border px-3 py-1.5 hover:bg-base-border transition-colors bg-base-bg"
+                                        >
+                                            {showExtendedPalette ? 'FECHAR' : 'ABRIR'}
+                                        </button>
+                                    </div>
+
+                                    {showExtendedPalette && (
+                                        <div className="grid grid-cols-6 sm:grid-cols-8 gap-2 p-3 border border-base-border bg-base-bg">
+                                            {EXTENDED_PALETTE.map((hex, idx) => (
+                                                <button
+                                                    key={idx}
+                                                    onClick={() => setLedConfig({ ...ledConfig, color: hex })}
+                                                    className="h-8 w-full border transition-all"
+                                                    style={{
+                                                        backgroundColor: hex,
+                                                        borderColor: ledConfig.color === hex ? '#ffffff' : 'transparent',
+                                                        boxShadow: ledConfig.color === hex ? `0 0 8px ${hex}80` : 'none'
+                                                    }}
+                                                />
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    <div className="flex h-10 border border-base-border bg-base-panel focus-within:border-base-muted transition-colors mt-2">
+                                        <div
+                                            className="w-10 h-full flex items-center justify-center border-r border-base-border transition-colors"
+                                            style={{ backgroundColor: ledConfig.color }}
+                                        />
                                         <input
-                                            type="color"
-                                            value={ledConfig.color}
+                                            type="text" value={ledConfig.color.toUpperCase()}
                                             onChange={(e) => setLedConfig({ ...ledConfig, color: e.target.value })}
-                                            className="absolute -inset-2 w-16 h-16 cursor-pointer"
+                                            className="flex-1 bg-transparent text-base-text text-xs px-3 focus:outline-none uppercase tracking-widest font-mono"
                                         />
                                     </div>
                                 </div>
