@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const PRESETS = [
     { name: 'FROST', hex: '#88C0D0' },
@@ -23,6 +23,21 @@ export default function CoreDashboard() {
     const [userName, setUserName] = useState('USER');
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+    // Carrega os dados salvos no Local Storage assim que a página é montada
+    useEffect(() => {
+        const savedName = localStorage.getItem('core_userName');
+        const savedAvatar = localStorage.getItem('core_avatar');
+        const savedBanner = localStorage.getItem('core_banner');
+
+        if (savedName) setUserName(savedName);
+        if (savedAvatar || savedBanner) {
+            setImages({
+                avatar: savedAvatar || '',
+                banner: savedBanner || ''
+            });
+        }
+    }, []);
+
     const metrics = { cpuUsage: 22, cpuTemp: 42, gpuUsage: 64, gpuTemp: 58 };
     const currentRpm = Math.round((fanSpeed / 100) * 2500);
 
@@ -35,10 +50,18 @@ export default function CoreDashboard() {
         }
     };
 
+    // Função que salva no Local Storage e fecha o menu
+    const handleSaveSettings = () => {
+        localStorage.setItem('core_userName', userName);
+        localStorage.setItem('core_avatar', images.avatar);
+        localStorage.setItem('core_banner', images.banner);
+        setIsMenuOpen(false);
+    };
+
     return (
         <main className="min-h-[100dvh] w-full flex flex-col relative selection:bg-base-text selection:text-base-bg overflow-x-hidden">
 
-            {/* BANNER (Altura aumentada para exibir mais a imagem) */}
+            {/* BANNER */}
             {images.banner && (
                 <div className="absolute top-0 left-0 w-full h-72 sm:h-96 z-0 pointer-events-none">
                     <div className="absolute inset-0 bg-gradient-to-b from-transparent via-base-bg/60 to-base-bg z-10" />
@@ -46,7 +69,7 @@ export default function CoreDashboard() {
                 </div>
             )}
 
-            {/* MODAL DE CONFIGURAÇÃO (Posicionado ao topo para evitar sobreposição do teclado) */}
+            {/* MODAL DE CONFIGURAÇÃO */}
             {isMenuOpen && (
                 <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/85 backdrop-blur-sm p-4 pt-10 sm:pt-20">
                     <div className="tactical-panel w-full max-w-sm flex flex-col shadow-2xl shadow-black/50">
@@ -108,7 +131,7 @@ export default function CoreDashboard() {
 
                         <div className="p-4 border-t border-base-border bg-base-bg flex justify-end">
                             <button
-                                onClick={() => setIsMenuOpen(false)}
+                                onClick={handleSaveSettings}
                                 className="bg-base-text text-base-bg px-6 py-2 text-xs font-bold uppercase tracking-widest hover:bg-base-muted transition-colors"
                             >
                                 Salvar
@@ -270,7 +293,6 @@ export default function CoreDashboard() {
                                     />
                                 </div>
 
-                                {/* Input de Cores Focado apenas na experiência tátil/visual */}
                                 <div className="flex items-center justify-between">
                                     <span className="text-[10px] font-mono text-base-muted tracking-widest uppercase">Cor Customizada</span>
                                     <div className="w-12 h-10 border border-base-border bg-base-panel focus-within:border-base-muted transition-colors relative overflow-hidden">
